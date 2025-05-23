@@ -1,12 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
-import {
-  LAMPORTS_PER_SOL,
-  SystemProgram,
-  Transaction,
-  PublicKey,
-} from "@solana/web3.js";
+import { LAMPORTS_PER_SOL, SystemProgram, Transaction, PublicKey } from "@solana/web3.js";
 
 const Home = () => {
   const { publicKey, connected, sendTransaction, signMessage } = useWallet();
@@ -14,6 +9,7 @@ const Home = () => {
   const [balance, setBalance] = useState(null);
   const [status, setStatus] = useState("");
   const [recipent, setRecipent] = useState("");
+  const [amount, setAmount] = useState("");
 
   useEffect(() => {
     const fetchBalance = async () => {
@@ -28,30 +24,38 @@ const Home = () => {
 
   const sendSol = async () => {
     try {
-      if (!recipent) {
-        setStatus("❌ Please enter a recipient public key.");
+      if (!recipent || !amount) {
+        setStatus("❌ Please enter both recipient address and amount.");
         return;
       }
 
-      const recipentPubKey = new PublicKey(recipent);
-      setStatus("Sending 0.001 SOL...");
+      const recipientPubKey = new PublicKey(recipent);
+      const lamports = parseFloat(amount) * LAMPORTS_PER_SOL;
+
+      if (isNaN(lamports) || lamports <= 0) {
+        setStatus("❌ Invalid amount entered.");
+        return;
+      }
+
+      setStatus(`Sending ${amount} SOL...`);
 
       const tx = new Transaction().add(
         SystemProgram.transfer({
           fromPubkey: publicKey,
-          toPubkey: recipentPubKey,
-          lamports: 0.001 * LAMPORTS_PER_SOL,
+          toPubkey: recipientPubKey,
+          lamports,
         })
       );
 
       const signature = await sendTransaction(tx, connection);
       await connection.confirmTransaction(signature, "confirmed");
 
-      setStatus(`✅ Sent! Tx: ${signature}`);
+      setStatus(`✅ Sent ${amount} SOL! Tx: ${signature}`);
       setRecipent("");
+      setAmount("");
     } catch (err) {
       console.error(err);
-      setStatus("❌ Error sending SOL. Invalid public key?");
+      setStatus("❌ Error sending SOL. Check recipient and amount.");
     }
   };
 
@@ -59,11 +63,8 @@ const Home = () => {
     try {
       const message = new TextEncoder().encode("Hello from Solana!");
       const signed = await signMessage(message);
-
       setStatus(
-        `📝 Message signed! Signature: ${Buffer.from(signed)
-          .toString("hex")
-          .slice(0, 32)}...`
+        `📝 Message signed! Signature: ${Buffer.from(signed).toString("hex").slice(0, 32)}...`
       );
     } catch (err) {
       console.error(err);
@@ -99,6 +100,13 @@ const Home = () => {
               value={recipent}
               onChange={(e) => setRecipent(e.target.value)}
               placeholder="Enter recipient public key"
+              className="w-full px-4 py-2 border rounded-lg bg-gray-50 text-sm mb-2"
+            />
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="Amount (SOL)"
               className="w-full px-4 py-2 border rounded-lg bg-gray-50 text-sm mb-3"
             />
 
@@ -107,7 +115,7 @@ const Home = () => {
                 onClick={sendSol}
                 className="w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition duration-300"
               >
-                Send 0.001 SOL
+                Send SOL
               </button>
 
               <button
@@ -116,12 +124,13 @@ const Home = () => {
               >
                 Sign Message
               </button>
-              {status && (
-              <div className="mt-4 p-3 bg-gray-100 rounded-lg border text-sm text-gray-800 text-center truncate">
-              {status}
-              </div>
-            )}
             </div>
+
+            {status && (
+              <p className="text-sm text-center text-gray-600 border-t pt-4 break-words">
+                {status}
+              </p>
+            )}
           </>
         )}
       </div>
