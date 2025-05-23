@@ -1,0 +1,132 @@
+import React, { useEffect, useState } from "react";
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import {
+  LAMPORTS_PER_SOL,
+  SystemProgram,
+  Transaction,
+  PublicKey,
+} from "@solana/web3.js";
+
+const Home = () => {
+  const { publicKey, connected, sendTransaction, signMessage } = useWallet();
+  const { connection } = useConnection();
+  const [balance, setBalance] = useState(null);
+  const [status, setStatus] = useState("");
+  const [recipent, setRecipent] = useState("");
+
+  useEffect(() => {
+    const fetchBalance = async () => {
+      if (publicKey) {
+        const bal = await connection.getBalance(publicKey);
+        setBalance(bal / LAMPORTS_PER_SOL);
+      }
+    };
+
+    fetchBalance();
+  }, [publicKey, connection]);
+
+  const sendSol = async () => {
+    try {
+      if (!recipent) {
+        setStatus("❌ Please enter a recipient public key.");
+        return;
+      }
+
+      const recipentPubKey = new PublicKey(recipent);
+      setStatus("Sending 0.001 SOL...");
+
+      const tx = new Transaction().add(
+        SystemProgram.transfer({
+          fromPubkey: publicKey,
+          toPubkey: recipentPubKey,
+          lamports: 0.001 * LAMPORTS_PER_SOL,
+        })
+      );
+
+      const signature = await sendTransaction(tx, connection);
+      await connection.confirmTransaction(signature, "confirmed");
+
+      setStatus(`✅ Sent! Tx: ${signature}`);
+      setRecipent("");
+    } catch (err) {
+      console.error(err);
+      setStatus("❌ Error sending SOL. Invalid public key?");
+    }
+  };
+
+  const signTestMessage = async () => {
+    try {
+      const message = new TextEncoder().encode("Hello from Solana!");
+      const signed = await signMessage(message);
+
+      setStatus(
+        `📝 Message signed! Signature: ${Buffer.from(signed)
+          .toString("hex")
+          .slice(0, 32)}...`
+      );
+    } catch (err) {
+      console.error(err);
+      setStatus("❌ Error signing message");
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
+      <div className="max-w-md w-full bg-white text-black rounded-2xl shadow-xl p-8 space-y-6">
+        <h1 className="text-2xl font-bold text-center">🪙 Solana Wallet Interface</h1>
+
+        <div className="flex justify-center">
+          <WalletMultiButton className="!bg-black !text-white hover:!bg-gray-900 transition duration-300" />
+        </div>
+
+        {connected && (
+          <>
+            <div className="border rounded-lg p-4 bg-gray-100 text-sm">
+              <p className="text-gray-600 font-semibold">Connected Wallet:</p>
+              <p className="font-mono break-all">{publicKey.toBase58()}</p>
+            </div>
+
+            <div className="text-center text-lg font-medium">
+              Balance:{" "}
+              <span className="text-black font-bold">
+                {balance !== null ? `${balance.toFixed(3)} SOL` : "Loading..."}
+              </span>
+            </div>
+
+            <input
+              type="text"
+              value={recipent}
+              onChange={(e) => setRecipent(e.target.value)}
+              placeholder="Enter recipient public key"
+              className="w-full px-4 py-2 border rounded-lg bg-gray-50 text-sm mb-3"
+            />
+
+            <div className="space-y-3">
+              <button
+                onClick={sendSol}
+                className="w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition duration-300"
+              >
+                Send 0.001 SOL
+              </button>
+
+              <button
+                onClick={signTestMessage}
+                className="w-full border border-black text-black py-2 rounded-lg hover:bg-black hover:text-white transition duration-300"
+              >
+                Sign Message
+              </button>
+              {status && (
+              <div className="mt-4 p-3 bg-gray-100 rounded-lg border text-sm text-gray-800 text-center truncate">
+              {status}
+              </div>
+            )}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Home;
