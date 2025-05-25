@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
-import { LAMPORTS_PER_SOL, SystemProgram, Transaction, PublicKey } from "@solana/web3.js";
+import { LAMPORTS_PER_SOL, SystemProgram, Transaction, PublicKey, Connection } from "@solana/web3.js";
 
 const Home = () => {
   const { publicKey, connected, sendTransaction, signMessage } = useWallet();
@@ -58,6 +58,28 @@ const Home = () => {
       setStatus("❌ Error sending SOL. Check recipient and amount.");
     }
   };
+  const reqAirdrop = async () => {
+  try {
+    if (!recipent) {
+      setStatus("❌ Please enter a recipient public key.");
+      return;
+    }
+
+    const recipientPubKey = new PublicKey(recipent);
+    const lamports = parseFloat(amount)
+
+    setStatus("⏳ Requesting airdrop to recipient...");
+
+    const signature = await connection.requestAirdrop(recipientPubKey, LAMPORTS_PER_SOL);
+    await connection.confirmTransaction(signature, "confirmed");
+
+    setStatus(`✅ Airdropped 1 SOL to ${recipientPubKey.toBase58()}! Tx: ${signature}`);
+  } catch (err) {
+    console.error(err);
+    setStatus("❌ Airdrop failed. Check the recipient address.");
+  }
+};
+
 
   const signTestMessage = async () => {
     try {
@@ -117,6 +139,11 @@ const Home = () => {
               >
                 Send SOL
               </button>
+               <div className = "w-fulll flex justify-center items-center">
+              <button onClick = { reqAirdrop } className="backdrop-blur-md bg-white/10 border border-white/30 text-black px-6 py-3 rounded-2xl shadow-lg  hover:shadow-xl transition-all duration-300 ease-in-out hover:scale-105 font-semibold">
+               Request Airdrop
+              </button>
+               </div>
 
               <button
                 onClick={signTestMessage}
