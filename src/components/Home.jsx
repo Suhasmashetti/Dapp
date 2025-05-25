@@ -95,9 +95,9 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
+    <div className="min-h-screen bg-slate-300 text-black flex items-center justify-center px-4">
       <div className="max-w-md w-full bg-white text-black rounded-2xl shadow-xl p-8 space-y-6">
-        <h1 className="text-2xl font-bold text-center">🪙 Solana Wallet Interface</h1>
+        <h1 className="text-2xl font-bold text-center">◎ Solana Wallet-Adapter</h1>
 
         <div className="flex justify-center">
           <WalletMultiButton className="!bg-black !text-white hover:!bg-gray-900 transition duration-300" />
@@ -135,19 +135,19 @@ const Home = () => {
             <div className="space-y-3">
               <button
                 onClick={sendSol}
-                className="w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition duration-300"
+                className="bg-slate-300 text-black w-full px-4 py-2 rounded-xl hover:scale-105 hover:bg-slate-400"
               >
                 Send SOL
               </button>
                <div className = "w-fulll flex justify-center items-center">
-              <button onClick = { reqAirdrop } className="backdrop-blur-md bg-white/10 border border-white/30 text-black px-6 py-3 rounded-2xl shadow-lg  hover:shadow-xl transition-all duration-300 ease-in-out hover:scale-105 font-semibold">
-               Request Airdrop
+              <button onClick = { reqAirdrop } className="bg-slate-300 text-black w-full px-4 py-2 rounded-xl hover:scale-105 hover:bg-slate-500">
+               Airdrop
               </button>
                </div>
 
               <button
                 onClick={signTestMessage}
-                className="w-full border border-black text-black py-2 rounded-lg hover:bg-black hover:text-white transition duration-300"
+                className="bg-slate-300 text-black  w-full px-4 py-2 rounded-xl hover:scale-105 hover:bg-slate-500"
               >
                 Sign Message
               </button>

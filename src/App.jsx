@@ -9,5 +9,4 @@ function App() {
     </WalletConnectionProvider>
   );
 }
-
 export default App;
